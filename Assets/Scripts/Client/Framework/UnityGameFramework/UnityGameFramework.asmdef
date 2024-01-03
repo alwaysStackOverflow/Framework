@@ -1,0 +1,16 @@
+{
+    "name": "UnityGameFramework",
+    "rootNamespace": "UnityGameFramework",
+    "references": [
+        "GUID:4b33890697a5ea7419d62eedbba210a5"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
