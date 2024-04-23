@@ -7,6 +7,7 @@
 
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Compilation;
 
 namespace UnityGameFramework.Editor
 {
@@ -21,8 +22,8 @@ namespace UnityGameFramework.Editor
             BuildTargetGroup.iOS,
             BuildTargetGroup.Android,
             BuildTargetGroup.WSA,
-            BuildTargetGroup.WebGL
-        };
+            BuildTargetGroup.WebGL,
+		};
 
         /// <summary>
         /// 检查指定平台是否存在指定的脚本宏定义。
@@ -72,14 +73,14 @@ namespace UnityGameFramework.Editor
             };
 
             SetScriptingDefineSymbols(buildTargetGroup, scriptingDefineSymbols.ToArray());
-        }
+		}
 
-        /// <summary>
-        /// 为指定平台移除指定的脚本宏定义。
-        /// </summary>
-        /// <param name="buildTargetGroup">要移除脚本宏定义的平台。</param>
-        /// <param name="scriptingDefineSymbol">要移除的脚本宏定义。</param>
-        public static void RemoveScriptingDefineSymbol(BuildTargetGroup buildTargetGroup, string scriptingDefineSymbol)
+		/// <summary>
+		/// 为指定平台移除指定的脚本宏定义。
+		/// </summary>
+		/// <param name="buildTargetGroup">要移除脚本宏定义的平台。</param>
+		/// <param name="scriptingDefineSymbol">要移除的脚本宏定义。</param>
+		public static void RemoveScriptingDefineSymbol(BuildTargetGroup buildTargetGroup, string scriptingDefineSymbol)
         {
             if (string.IsNullOrEmpty(scriptingDefineSymbol))
             {
@@ -115,7 +116,8 @@ namespace UnityGameFramework.Editor
             {
                 AddScriptingDefineSymbol(buildTargetGroup, scriptingDefineSymbol);
             }
-        }
+			DefineModify.AddAssemblyDefineSymbol(scriptingDefineSymbol);
+		}
 
         /// <summary>
         /// 为所有平台移除指定的脚本宏定义。
@@ -127,12 +129,12 @@ namespace UnityGameFramework.Editor
             {
                 return;
             }
-
-            foreach (BuildTargetGroup buildTargetGroup in BuildTargetGroups)
+            DefineModify.RemoveAssemblyDefineSymbol(scriptingDefineSymbol);
+			foreach (BuildTargetGroup buildTargetGroup in BuildTargetGroups)
             {
                 RemoveScriptingDefineSymbol(buildTargetGroup, scriptingDefineSymbol);
             }
-        }
+		}
 
         /// <summary>
         /// 获取指定平台的脚本宏定义。

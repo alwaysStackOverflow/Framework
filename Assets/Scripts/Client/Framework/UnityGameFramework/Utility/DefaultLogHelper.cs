@@ -22,27 +22,50 @@ namespace UnityGameFramework
         /// <param name="message">日志内容。</param>
         public void Log(GameFrameworkLogLevel level, object message)
         {
-            switch (level)
+#if UNITY_EDITOR
+			switch (level)
+			{
+				case GameFrameworkLogLevel.Debug:
+					Debug.Log($"<color=#888888>{message}</color>");
+					break;
+
+				case GameFrameworkLogLevel.Info:
+					Debug.Log(message);
+					break;
+
+				case GameFrameworkLogLevel.Warning:
+					Debug.LogWarning(message);
+					break;
+
+				case GameFrameworkLogLevel.Error:
+					Debug.LogError(message);
+					break;
+				default:
+					Debug.Log(message);
+					break;
+			}
+#else
+			WriteLog(message);
+#endif
+		}
+
+		private readonly string LogFilePath = $"{Application.persistentDataPath}/Log";
+        private void WriteLog(object message)
+        {
+			var log = $"{System.DateTime.Now:yyyy-MM-dd HH:MM:ss:ffff}: {message}";
+            if(!System.IO.Directory.Exists(LogFilePath))
             {
-                case GameFrameworkLogLevel.Debug:
-                    Debug.Log(Utility.Text.Format("<color=#888888>{0}</color>", message.ToString()));
-                    break;
-
-                case GameFrameworkLogLevel.Info:
-                    Debug.Log(message.ToString());
-                    break;
-
-                case GameFrameworkLogLevel.Warning:
-                    Debug.LogWarning(message.ToString());
-                    break;
-
-                case GameFrameworkLogLevel.Error:
-                    Debug.LogError(message.ToString());
-                    break;
-
-                default:
-                    throw new GameFrameworkException(message.ToString());
-            }
-        }
+				System.IO.Directory.CreateDirectory(LogFilePath);
+			}
+            var fileName = $"{LogFilePath}/{System.DateTime.Now:yyyy-MM-dd}.log";
+            if(!System.IO.File.Exists(fileName))
+            {
+				System.IO.File.Create(fileName).Dispose();
+			}
+			using var writer = System.IO.File.AppendText(fileName);
+			writer.WriteLine(log);
+            writer.Flush();
+            writer.Close();
+		}
     }
 }

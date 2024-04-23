@@ -20,6 +20,8 @@ namespace UnityGameFramework.Editor
         {
 			"GameFramework",
 			"UnityGameFramework",
+			"YooAsset",
+			"Loader",
 			"Common",
 			"Client",
 			"Server",
@@ -30,6 +32,9 @@ namespace UnityGameFramework.Editor
         {
 			"GameFramework",
 			"UnityGameFramework",
+			"YooAsset.Editor",
+			"YooAsset",
+			"Loader",
 			"Common",
 			"Client",
 			"Server",
@@ -38,12 +43,12 @@ namespace UnityGameFramework.Editor
 			"Assembly-CSharp-Editor",
         };
 
-        /// <summary>
-        /// 获取配置路径。
-        /// </summary>
-        /// <typeparam name="T">配置类型。</typeparam>
-        /// <returns>配置路径。</returns>
-        internal static string GetConfigurationPath<T>() where T : ConfigPathAttribute
+		/// <summary>
+		/// 获取配置路径。
+		/// </summary>
+		/// <typeparam name="T">配置类型。</typeparam>
+		/// <returns>配置路径。</returns>
+		internal static string GetConfigurationPath<T>() where T : ConfigPathAttribute
         {
             foreach (System.Type type in Utility.Assembly.GetTypes())
             {

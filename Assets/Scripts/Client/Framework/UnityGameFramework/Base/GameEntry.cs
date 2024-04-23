@@ -20,10 +20,12 @@ namespace UnityGameFramework
     {
         private static readonly GameFrameworkLinkedList<GameFrameworkComponent> s_GameFrameworkComponents = new GameFrameworkLinkedList<GameFrameworkComponent>();
 
-        /// <summary>
-        /// 游戏框架所在的场景编号。
-        /// </summary>
-        internal const int GameFrameworkSceneId = 0;
+		internal const int LoaderSceneId = 0;
+
+		/// <summary>
+		/// 游戏框架所在的场景编号。
+		/// </summary>
+		internal const int GameFrameworkSceneId = 1;
 
         /// <summary>
         /// 获取游戏框架组件。

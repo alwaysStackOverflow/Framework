@@ -12,7 +12,7 @@ using UnityObject = UnityEngine.Object;
 
 public class GenerateProtocol : OdinEditorWindow
 {
-	[MenuItem("ProjectTools/协议文件工具 Tool")]
+	[MenuItem("项目工具/协议文件工具")]
 	public static void ShowWindow()
 	{
 		var window = GetWindow<GenerateProtocol>();
