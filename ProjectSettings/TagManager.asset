@@ -11,10 +11,10 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - LowUI
+  - MidUI
+  - TopUI
+  - Entity
   - 
   - 
   - 
@@ -40,4 +40,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: LowUI
+    uniqueID: 2816834507
+    locked: 0
+  - name: MidUI
+    uniqueID: 4060342647
+    locked: 0
+  - name: TopUI
+    uniqueID: 3158781593
+    locked: 0
+  - name: Entity
+    uniqueID: 2806662677
     locked: 0

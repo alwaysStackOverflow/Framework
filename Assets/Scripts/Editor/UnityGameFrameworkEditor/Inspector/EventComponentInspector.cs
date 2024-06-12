@@ -25,11 +25,11 @@ namespace UnityGameFramework.Editor
 
             EventComponent t = (EventComponent)target;
 
-            if (IsPrefabInHierarchy(t.gameObject))
-            {
-                EditorGUILayout.LabelField("Event Handler Count", t.EventHandlerCount.ToString());
-                EditorGUILayout.LabelField("Event Count", t.EventCount.ToString());
-            }
+            //if (IsPrefabInHierarchy(t.gameObject))
+            //{
+            //    EditorGUILayout.LabelField("Event Handler Count", t.EventHandlerCount.ToString());
+            //    EditorGUILayout.LabelField("Event Count", t.EventCount.ToString());
+            //}
 
             Repaint();
         }

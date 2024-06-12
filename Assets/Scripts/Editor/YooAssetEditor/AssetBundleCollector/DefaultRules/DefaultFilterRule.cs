@@ -49,7 +49,16 @@ namespace YooAsset.Editor
         }
     }
 
-    [DisplayName("收集精灵类型的纹理")]
+	[DisplayName("收集非预制体")]
+	public class CollectNotPrefab : IFilterRule
+	{
+		public bool IsCollectAsset(FilterRuleData data)
+		{
+			return Path.GetExtension(data.AssetPath) != ".prefab";
+		}
+	}
+
+	[DisplayName("收集精灵类型的纹理")]
     public class CollectSprite : IFilterRule
     {
         public bool IsCollectAsset(FilterRuleData data)

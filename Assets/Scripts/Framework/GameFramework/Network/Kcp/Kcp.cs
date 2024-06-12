@@ -35,7 +35,7 @@ public partial class Kcp
 	public const int PROBE_INIT = 7000;        // 7 secs to probe window size
 	public const int PROBE_LIMIT = 120000;     // up to 120 secs to probe window
 	public const int FASTACK_LIMIT = 5;        // max times to trigger fastack
-	public const int RESERVED_BYTE = 5; // 包头预留字节数 供et网络层使用
+	public const int RESERVED_BYTE = 9;         // 包头预留字节数 供网络层使用,用于校验消息，参考KcpService
 
 	// kcp members.
 	internal int state;
@@ -253,14 +253,16 @@ public partial class Kcp
 		int length = 0;
 
 		// empty queue?
-		if (rcv_queue.Count == 0) return -1;
+		if (rcv_queue.Count == 0)
+			return -1;
 
 		// peek the first segment
 		SegmentStruct seq = rcv_queue.Peek();
 
 		// seg.frg is 0 if the message requires no fragmentation.
 		// in that case, the segment's size is the final message size.
-		if (seq.SegHead.frg == 0) return seq.WrittenCount;
+		if (seq.SegHead.frg == 0)
+			return seq.WrittenCount;
 
 		// check if all fragment parts were received yet.
 		// seg.frg is the n-th fragment, but in reverse.
@@ -269,14 +271,16 @@ public partial class Kcp
 		//   first segment:  .frg is 2 (index in reverse)
 		//   second segment: .frg is 1 (index in reverse)
 		//   third segment:  .frg is 0 (index in reverse)
-		if (rcv_queue.Count < seq.SegHead.frg + 1) return -1;
+		if (rcv_queue.Count < seq.SegHead.frg + 1)
+			return -1;
 
 		// recv_queue contains all the fragments necessary to reconstruct the message.
 		// sum all fragment's sizes to get the full message size.
 		foreach (SegmentStruct seg in rcv_queue)
 		{
 			length += seg.WrittenCount;
-			if (seg.SegHead.frg == 0) break;
+			if (seg.SegHead.frg == 0)
+				break;
 		}
 
 		return length;
@@ -295,8 +299,10 @@ public partial class Kcp
 		// receive 'he' 'll' 'o'. we want to always receive 'hello'.
 
 		// calculate amount of fragments necessary for 'len'
-		if (len <= mss) count = 1;
-		else count = (int)((len + mss - 1) / mss);
+		if (len <= mss)
+			count = 1;
+		else
+			count = (int)((len + mss - 1) / mss);
 
 		// IMPORTANT kcp encodes 'frg' as 1 byte.
 		// so we can only support up to 255 fragments.
@@ -310,9 +316,11 @@ public partial class Kcp
 		// which always limits max message size to 144 KB:
 		//if (count >= WND_RCV) return -2;
 		// using configured rcv_wnd uncorks max message size to 'any':
-		if (count >= rcv_wnd) return -2;
+		if (count >= rcv_wnd)
+			return -2;
 
-		if (count == 0) count = 1;
+		if (count == 0)
+			count = 1;
 
 		ref byte dataRef = ref MemoryMarshal.GetReference(data);
 
@@ -351,10 +359,12 @@ public partial class Kcp
 		else
 		{
 			int delta = rtt - rx_srtt;
-			if (delta < 0) delta = -delta;
+			if (delta < 0)
+				delta = -delta;
 			rx_rttval = (3 * rx_rttval + delta) / 4;
 			rx_srtt = (7 * rx_srtt + rtt) / 8;
-			if (rx_srtt < 1) rx_srtt = 1;
+			if (rx_srtt < 1)
+				rx_srtt = 1;
 		}
 		int rto = rx_srtt + Math.Max((int)interval, 4 * rx_rttval);
 		rx_rto = Utils.Clamp(rto, rx_minrto, RTO_MAX);
@@ -626,12 +636,14 @@ public partial class Kcp
 		uint latest_ts = 0;
 		int flag = 0;
 
-		if (data == null || size < OVERHEAD) return -1;
+		if (data == null || size < OVERHEAD)
+			return -1;
 
 		while (true)
 		{
 			// enough data left to decode segment (aka OVERHEAD bytes)?
-			if (size < OVERHEAD) break;
+			if (size < OVERHEAD)
+				break;
 
 			var segHead = Unsafe.ReadUnaligned<SegmentHead>(ref MemoryMarshal.GetReference(data.Slice(offset)));
 			offset += Unsafe.SizeOf<SegmentHead>();
@@ -649,7 +661,8 @@ public partial class Kcp
 
 			// enough remaining to read 'len' bytes of the actual payload?
 			// note: original kcp casts uint len to int for <0 check.
-			if (size < len || (int)len < 0) return -2;
+			if (size < len || (int)len < 0)
+				return -2;
 
 			// validate command type
 			if (cmd != CMD_PUSH && cmd != CMD_ACK &&
@@ -659,7 +672,6 @@ public partial class Kcp
 			rmt_wnd = wnd;
 			ParseUna(una);
 			ShrinkBuf();
-
 			if (cmd == CMD_ACK)
 			{
 				if (Utils.TimeDiff(current, ts) >= 0)
@@ -754,7 +766,8 @@ public partial class Kcp
 				}
 				else
 				{
-					if (incr < mss) incr = mss;
+					if (incr < mss)
+						incr = mss;
 					incr += (mss * mss) / incr + (mss / 16);
 					if ((cwnd + 1) * mss <= incr)
 					{
@@ -806,7 +819,8 @@ public partial class Kcp
 		bool lost = false; // lost segments
 
 		// update needs to be called before flushing
-		if (!updated) return;
+		if (!updated)
+			return;
 
 		// kcp only stack allocates a segment here for performance, leaving
 		// its data buffer null because this segment's data buffer is never
@@ -891,7 +905,8 @@ public partial class Kcp
 		// note this may heavily limit window sizes.
 		// for our max message size test with super large windows of 32k,
 		// 'congestion window' limits it down from 32.000 to 2.
-		if (!nocwnd) cwnd_ = Math.Min(cwnd, cwnd_);
+		if (!nocwnd)
+			cwnd_ = Math.Min(cwnd, cwnd_);
 
 		// move cwnd_ 'window size' messages from snd_queue to snd_buf
 		//   'snd_nxt' is what we want to send.
@@ -899,7 +914,8 @@ public partial class Kcp
 		//   copy up to 'cwnd_' difference between them (sliding window)
 		while (Utils.TimeDiff(snd_nxt, snd_una + cwnd_) < 0)
 		{
-			if (snd_queue.Count == 0) break;
+			if (snd_queue.Count == 0)
+				break;
 
 			SegmentStruct newseg = snd_queue.Dequeue();
 
@@ -1135,17 +1151,20 @@ public partial class Kcp
 			{
 				return current_;
 			}
-			if (diff < tm_packet) tm_packet = diff;
+			if (diff < tm_packet)
+				tm_packet = diff;
 		}
 
 		uint minimal = (uint)(tm_packet < tm_flush ? tm_packet : tm_flush);
-		if (minimal >= interval) minimal = interval;
+		if (minimal >= interval)
+			minimal = interval;
 
 		return current_ + minimal;
 	}
 
-	// ikcp_setmtu
-	// Change MTU (Maximum Transmission Unit) size.
+	/// <summary>
+	/// 设置 MTU (Maximum Transmission Unit， 最大传输单元) 大小， 单位 byte.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void SetMtu(uint mtu)
 	{
@@ -1162,8 +1181,10 @@ public partial class Kcp
 	public void SetInterval(uint interval)
 	{
 		// clamp interval between 10 and 5000
-		if (interval > 5000) interval = 5000;
-		else if (interval < 10) interval = 10;
+		if (interval > 5000)
+			interval = 5000;
+		else if (interval < 10)
+			interval = 10;
 		this.interval = interval;
 	}
 
@@ -1188,8 +1209,10 @@ public partial class Kcp
 		}
 
 		// clamp interval between 10 and 5000
-		if (interval > 5000) interval = 5000;
-		else if (interval < 10) interval = 10;
+		if (interval > 5000)
+			interval = 5000;
+		else if (interval < 10)
+			interval = 10;
 		this.interval = interval;
 
 		if (resend >= 0)
@@ -1216,6 +1239,9 @@ public partial class Kcp
 		}
 	}
 
+	/// <summary>
+	/// 设置最小的重传超时时间（RTO，Retransmission Timeout）， 单位 毫秒.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void SetMinrto(int minrto)
 	{

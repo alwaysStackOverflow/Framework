@@ -5,7 +5,7 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
-using System;
+using GameFramework.Network;
 
 namespace GameFramework.Event
 {
@@ -14,69 +14,23 @@ namespace GameFramework.Event
     /// </summary>
     public interface IEventManager
     {
-        /// <summary>
-        /// 获取事件处理函数的数量。
-        /// </summary>
-        int EventHandlerCount
-        {
-            get;
-        }
+		#region Event
+		public void Subscribe<T>(string id, GameFrameworkAction<T> handler) where T : BaseEventArgs;
 
-        /// <summary>
-        /// 获取事件数量。
-        /// </summary>
-        int EventCount
-        {
-            get;
-        }
+        public void Unsubscribe<T>(string id, GameFrameworkAction<T> handler) where T : BaseEventArgs;
 
-        /// <summary>
-        /// 获取事件处理函数的数量。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <returns>事件处理函数的数量。</returns>
-        int Count(int id);
+        public void Fire<T>(T e = default) where T : BaseEventArgs;
 
-        /// <summary>
-        /// 检查是否存在事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要检查的事件处理函数。</param>
-        /// <returns>是否存在事件处理函数。</returns>
-        bool Check(int id, EventHandler<GameEventArgs> handler);
+        public void FireNow<T>(T e = default) where T : BaseEventArgs;
+		#endregion Event
 
-        /// <summary>
-        /// 订阅事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要订阅的事件处理函数。</param>
-        void Subscribe(int id, EventHandler<GameEventArgs> handler);
+		#region Network
+		public void Listen<T>(int id, GameFrameworkAction<T> handler) where T : ProtoObject;
+		public void Unlisten<T>(int id, GameFrameworkAction<T> handler) where T : ProtoObject;
 
-        /// <summary>
-        /// 取消订阅事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要取消订阅的事件处理函数。</param>
-        void Unsubscribe(int id, EventHandler<GameEventArgs> handler);
+        public void Trigger<T>(T e) where T : ProtoObject;
 
-        /// <summary>
-        /// 设置默认事件处理函数。
-        /// </summary>
-        /// <param name="handler">要设置的默认事件处理函数。</param>
-        void SetDefaultHandler(EventHandler<GameEventArgs> handler);
-
-        /// <summary>
-        /// 抛出事件，这个操作是线程安全的，即使不在主线程中抛出，也可保证在主线程中回调事件处理函数，但事件会在抛出后的下一帧分发。
-        /// </summary>
-        /// <param name="sender">事件源。</param>
-        /// <param name="e">事件参数。</param>
-        void Fire(object sender, GameEventArgs e);
-
-        /// <summary>
-        /// 抛出事件立即模式，这个操作不是线程安全的，事件会立刻分发。
-        /// </summary>
-        /// <param name="sender">事件源。</param>
-        /// <param name="e">事件参数。</param>
-        void FireNow(object sender, GameEventArgs e);
-    }
+        public void TriggerNow<T>(T e) where T : ProtoObject;
+		#endregion Network
+	}
 }

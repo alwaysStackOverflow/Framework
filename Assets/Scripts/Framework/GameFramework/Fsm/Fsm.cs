@@ -124,14 +124,54 @@ namespace GameFramework.Fsm
             }
         }
 
-        /// <summary>
-        /// 创建有限状态机。
-        /// </summary>
-        /// <param name="name">有限状态机名称。</param>
-        /// <param name="owner">有限状态机持有者。</param>
-        /// <param name="states">有限状态机状态集合。</param>
-        /// <returns>创建的有限状态机。</returns>
-        public static Fsm<T> Create(string name, T owner, params FsmState<T>[] states)
+        public void AddState(string name, params FsmState<T>[] states)
+        {
+			foreach (FsmState<T> state in states)
+			{
+				if (state == null)
+				{
+					throw new GameFrameworkException("FSM states is invalid.");
+				}
+
+				Type stateType = state.GetType();
+				if (m_States.ContainsKey(stateType))
+				{
+					throw new GameFrameworkException(Utility.Text.Format("FSM '{0}' state '{1}' is already exist.", new TypeNamePair(typeof(T), name), stateType.FullName));
+				}
+
+				m_States.Add(stateType, state);
+				state.OnInit(this);
+			}
+		}
+
+		public void AddState(string name, List<FsmState<T>> states)
+		{
+			foreach (FsmState<T> state in states)
+			{
+				if (state == null)
+				{
+					throw new GameFrameworkException("FSM states is invalid.");
+				}
+
+				Type stateType = state.GetType();
+				if (m_States.ContainsKey(stateType))
+				{
+					throw new GameFrameworkException(Utility.Text.Format("FSM '{0}' state '{1}' is already exist.", new TypeNamePair(typeof(T), name), stateType.FullName));
+				}
+
+				m_States.Add(stateType, state);
+				state.OnInit(this);
+			}
+		}
+
+		/// <summary>
+		/// 创建有限状态机。
+		/// </summary>
+		/// <param name="name">有限状态机名称。</param>
+		/// <param name="owner">有限状态机持有者。</param>
+		/// <param name="states">有限状态机状态集合。</param>
+		/// <returns>创建的有限状态机。</returns>
+		public static Fsm<T> Create(string name, T owner, params FsmState<T>[] states)
         {
             if (owner == null)
             {

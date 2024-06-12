@@ -22,11 +22,13 @@ namespace UnityGameFramework.Editor
 			"UnityGameFramework",
 			"YooAsset",
 			"Loader",
-			"Common",
+#if UNITY_EDITOR
+            "Common",
 			"Client",
 			"Server",
             "Assembly-CSharp",
-		};
+#endif
+        };
 
         private static readonly string[] RuntimeOrEditorAssemblyNames =
         {
@@ -39,7 +41,7 @@ namespace UnityGameFramework.Editor
 			"Client",
 			"Server",
 			"Assembly-CSharp",
-			"Editor",
+            "Editor",
 			"Assembly-CSharp-Editor",
         };
 

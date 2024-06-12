@@ -38,11 +38,13 @@ namespace GameFramework.Procedure
         /// <param name="procedures">流程管理器包含的流程。</param>
         void Initialize(IFsmManager fsmManager, params ProcedureBase[] procedures);
 
-        /// <summary>
-        /// 开始流程。
-        /// </summary>
-        /// <typeparam name="T">要开始的流程类型。</typeparam>
-        void StartProcedure<T>() where T : ProcedureBase;
+        void AddProcedure(params ProcedureBase[] procedures);
+
+		/// <summary>
+		/// 开始流程。
+		/// </summary>
+		/// <typeparam name="T">要开始的流程类型。</typeparam>
+		void StartProcedure<T>() where T : ProcedureBase;
 
         /// <summary>
         /// 开始流程。
@@ -77,5 +79,9 @@ namespace GameFramework.Procedure
         /// <param name="procedureType">要获取的流程类型。</param>
         /// <returns>要获取的流程。</returns>
         ProcedureBase GetProcedure(Type procedureType);
-    }
+
+        public void ChangeProcedure<T>() where T : ProcedureBase;
+
+        public void ChangeProcedure(Type t);
+	}
 }

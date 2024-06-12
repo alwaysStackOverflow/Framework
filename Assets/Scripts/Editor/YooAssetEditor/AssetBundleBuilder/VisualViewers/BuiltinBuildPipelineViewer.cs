@@ -44,7 +44,19 @@ namespace YooAsset.Editor
             buildParameters.EncryptionServices = CreateEncryptionInstance();
             buildParameters.CompressOption = compressOption;
 
-            BuiltinBuildPipeline pipeline = new BuiltinBuildPipeline();
+			var config = AssetDatabase.LoadAssetAtPath<Loader.GlobalConfig>("Assets/Resources/Config/GlobalConfig.asset");
+			if (buildParameters.EncryptionServices is YooAssetEncryption.FileOffsetEncryption)
+			{
+				config.EncryptionType = Loader.EncryptionType.FileOffsetEncryption;
+			}
+			else
+			{
+				config.EncryptionType = Loader.EncryptionType.None;
+			}
+			EditorUtility.SetDirty(config);
+			AssetDatabase.SaveAssets();
+
+			BuiltinBuildPipeline pipeline = new BuiltinBuildPipeline();
             var buildResult = pipeline.Run(buildParameters, true);
             if (buildResult.Success)
                 EditorUtility.RevealInFinder(buildResult.OutputPackageDirectory);

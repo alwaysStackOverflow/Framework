@@ -17,28 +17,68 @@ namespace GameFramework
         /// </summary>
         public static class Assembly
         {
-            private static readonly System.Reflection.Assembly[] s_Assemblies = null;
-            private static readonly Dictionary<string, Type> s_CachedTypes = new Dictionary<string, Type>(StringComparer.Ordinal);
+            private static readonly List<System.Reflection.Assembly> s_Assemblies = new();
+            private static readonly Dictionary<string, Type> s_CachedTypes = new(StringComparer.Ordinal);
+            public static System.Reflection.Assembly CommonAssembly { get; set; }
+			public static System.Reflection.Assembly ClientAssembly { get; set; }
+			public static System.Reflection.Assembly ServerAssembly { get; set; }
 
-            static Assembly()
+			static Assembly()
             {
-                s_Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+                foreach (var assembly in assemblies)
+                {
+#if !UNITY_EDITOR
+                    if(assembly.FullName.StartsWith("Common,") || assembly.FullName.StartsWith("Client,") || assembly.FullName.StartsWith("Server,"))
+                    {
+						continue;
+                    }
+#else
+                    if(assembly.FullName.StartsWith("Common,"))
+					{
+						CommonAssembly = assembly;
+					}
+                    else if (assembly.FullName.StartsWith("Client,"))
+                    {
+						ClientAssembly = assembly;
+					}
+                    else if (assembly.FullName.StartsWith("Server,"))
+                    {
+						ServerAssembly = assembly;
+					}
+#endif
+					s_Assemblies.Add(assembly);
+				}
             }
 
             /// <summary>
             /// 获取已加载的程序集。
             /// </summary>
             /// <returns>已加载的程序集。</returns>
-            public static System.Reflection.Assembly[] GetAssemblies()
+            public static List<System.Reflection.Assembly> GetAssemblies()
             {
                 return s_Assemblies;
             }
 
-            /// <summary>
-            /// 获取已加载的程序集中的所有类型。
-            /// </summary>
-            /// <returns>已加载的程序集中的所有类型。</returns>
-            public static Type[] GetTypes()
+            public static void AddAssembliy(System.Reflection.Assembly assembly)
+            {
+				if (assembly == null)
+                {
+					throw new GameFrameworkException("Assembly is invalid.");
+				}
+				if (s_Assemblies.Contains(assembly))
+                {
+					throw new GameFrameworkException("Assembly is already exist.");
+				}
+				s_Assemblies.Add(assembly);
+			}
+
+			/// <summary>
+			/// 获取已加载的程序集中的所有类型。
+			/// </summary>
+			/// <returns>已加载的程序集中的所有类型。</returns>
+			public static Type[] GetTypes()
             {
                 List<Type> results = new List<Type>();
                 foreach (System.Reflection.Assembly assembly in s_Assemblies)

@@ -133,18 +133,12 @@ namespace GameFramework.Resource
         /// 获取游戏框架模块优先级。
         /// </summary>
         /// <remarks>优先级较高的模块会优先轮询，并且关闭操作会后进行。</remarks>
-        internal override int Priority
-        {
-            get
-            {
-                return 3;
-            }
-        }
+        internal override int Priority => ResourceManagerPriority;
 
-        /// <summary>
-        /// 获取资源只读区路径。
-        /// </summary>
-        public string ReadOnlyPath
+		/// <summary>
+		/// 获取资源只读区路径。
+		/// </summary>
+		public string ReadOnlyPath
         {
             get
             {

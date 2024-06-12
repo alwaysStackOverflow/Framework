@@ -133,7 +133,7 @@ namespace GameFramework
                 {
                     if (m_EnableStrictCheck && m_References.Contains(reference))
                     {
-                        throw new GameFrameworkException("The reference has been released.");
+                        throw new GameFrameworkException($"The reference has been released. {reference.GetType()}");
                     }
 
                     m_References.Enqueue(reference);

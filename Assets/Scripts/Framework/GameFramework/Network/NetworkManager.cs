@@ -1,353 +1,166 @@
-﻿//------------------------------------------------------------
-// Game Framework
-// Copyright © 2013-2021 Jiang Yin. All rights reserved.
-// Homepage: https://gameframework.cn/
-// Feedback: mailto:ellan@gameframework.cn
-//------------------------------------------------------------
-
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
+﻿using System;
+using System.Net;
+using Log = GameFramework.GameFrameworkLog;
 
 namespace GameFramework.Network
 {
-    /// <summary>
-    /// 网络管理器。
-    /// </summary>
-    internal sealed partial class NetworkManager : GameFrameworkModule, INetworkManager
-    {
-        private readonly Dictionary<string, NetworkChannelBase> m_NetworkChannels;
+	internal class NetworkManager : GameFrameworkModule, INetworkManager
+	{
+		internal override int Priority => NetworkManagerPriority;
 
-        private EventHandler<NetworkConnectedEventArgs> m_NetworkConnectedEventHandler;
-        private EventHandler<NetworkClosedEventArgs> m_NetworkClosedEventHandler;
-        private EventHandler<NetworkMissHeartBeatEventArgs> m_NetworkMissHeartBeatEventHandler;
-        private EventHandler<NetworkErrorEventArgs> m_NetworkErrorEventHandler;
-        private EventHandler<NetworkCustomErrorEventArgs> m_NetworkCustomErrorEventHandler;
+		private KcpService _networkServiceV6;
+		private KcpService _networkServiceV4;
+		private KcpConnection _currentConnection;
+		private ProtocolType _currentServiceType;
 
-        /// <summary>
-        /// 初始化网络管理器的新实例。
-        /// </summary>
-        public NetworkManager()
-        {
-            m_NetworkChannels = new Dictionary<string, NetworkChannelBase>(StringComparer.Ordinal);
-            m_NetworkConnectedEventHandler = null;
-            m_NetworkClosedEventHandler = null;
-            m_NetworkMissHeartBeatEventHandler = null;
-            m_NetworkErrorEventHandler = null;
-            m_NetworkCustomErrorEventHandler = null;
-        }
+		private Action _acceptCallback;
+		private Action<MemoryBuffer> _readCallback;
+		private Action<int> _errorCallback;
 
-        /// <summary>
-        /// 获取网络频道数量。
-        /// </summary>
-        public int NetworkChannelCount
-        {
-            get
-            {
-                return m_NetworkChannels.Count;
-            }
-        }
+		public event Action AcceptCallback
+		{
+			add { _acceptCallback += value; }
+			remove { _acceptCallback -= value; }
+		}
 
-        /// <summary>
-        /// 网络连接成功事件。
-        /// </summary>
-        public event EventHandler<NetworkConnectedEventArgs> NetworkConnected
-        {
-            add
-            {
-                m_NetworkConnectedEventHandler += value;
-            }
-            remove
-            {
-                m_NetworkConnectedEventHandler -= value;
-            }
-        }
+		public event Action<MemoryBuffer> ReadCallback
+		{
+			add { _readCallback += value; }
+			remove { _readCallback -= value; }
+		}
 
-        /// <summary>
-        /// 网络连接关闭事件。
-        /// </summary>
-        public event EventHandler<NetworkClosedEventArgs> NetworkClosed
-        {
-            add
-            {
-                m_NetworkClosedEventHandler += value;
-            }
-            remove
-            {
-                m_NetworkClosedEventHandler -= value;
-            }
-        }
+		public event Action<int> ErrorCallback
+		{
+			add { _errorCallback += value; }
+			remove { _errorCallback -= value; }
+		}
 
-        /// <summary>
-        /// 网络心跳包丢失事件。
-        /// </summary>
-        public event EventHandler<NetworkMissHeartBeatEventArgs> NetworkMissHeartBeat
-        {
-            add
-            {
-                m_NetworkMissHeartBeatEventHandler += value;
-            }
-            remove
-            {
-                m_NetworkMissHeartBeatEventHandler -= value;
-            }
-        }
+		public NetworkManager()
+		{
+			_networkServiceV6 = new KcpService(ServiceType.Client, ProtocolType.UdpV6, PortType.ClientUdpV6);
+			_networkServiceV6.AcceptCallback += OnAcceptCallback;
+			_networkServiceV6.ReadCallback += OnReadCallback;
+			_networkServiceV6.ErrorCallback += OnErrorCallback;
 
-        /// <summary>
-        /// 网络错误事件。
-        /// </summary>
-        public event EventHandler<NetworkErrorEventArgs> NetworkError
-        {
-            add
-            {
-                m_NetworkErrorEventHandler += value;
-            }
-            remove
-            {
-                m_NetworkErrorEventHandler -= value;
-            }
-        }
+			_networkServiceV4 = new KcpService(ServiceType.Client, ProtocolType.UdpV4, PortType.ClientUdpV4);
+			_networkServiceV4.AcceptCallback += OnAcceptCallback;
+			_networkServiceV4.ReadCallback += OnReadCallback;
+			_networkServiceV4.ErrorCallback += OnErrorCallback;
 
-        /// <summary>
-        /// 用户自定义网络错误事件。
-        /// </summary>
-        public event EventHandler<NetworkCustomErrorEventArgs> NetworkCustomError
-        {
-            add
-            {
-                m_NetworkCustomErrorEventHandler += value;
-            }
-            remove
-            {
-                m_NetworkCustomErrorEventHandler -= value;
-            }
-        }
+			_acceptCallback = null;
+			_readCallback = null;
+			_errorCallback = null;
+		}
 
-        /// <summary>
-        /// 网络管理器轮询。
-        /// </summary>
-        /// <param name="elapseSeconds">逻辑流逝时间，以秒为单位。</param>
-        /// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
-        internal override void Update(float elapseSeconds, float realElapseSeconds)
-        {
-            foreach (KeyValuePair<string, NetworkChannelBase> networkChannel in m_NetworkChannels)
-            {
-                networkChannel.Value.Update(elapseSeconds, realElapseSeconds);
-            }
-        }
 
-        /// <summary>
-        /// 关闭并清理网络管理器。
-        /// </summary>
-        internal override void Shutdown()
-        {
-            foreach (KeyValuePair<string, NetworkChannelBase> networkChannel in m_NetworkChannels)
-            {
-                NetworkChannelBase networkChannelBase = networkChannel.Value;
-                networkChannelBase.NetworkChannelConnected -= OnNetworkChannelConnected;
-                networkChannelBase.NetworkChannelClosed -= OnNetworkChannelClosed;
-                networkChannelBase.NetworkChannelMissHeartBeat -= OnNetworkChannelMissHeartBeat;
-                networkChannelBase.NetworkChannelError -= OnNetworkChannelError;
-                networkChannelBase.NetworkChannelCustomError -= OnNetworkChannelCustomError;
-                networkChannelBase.Shutdown();
-            }
+		internal override void Shutdown()
+		{
+			_networkServiceV6.Dispose();
+			_networkServiceV6 = null;
+			_networkServiceV4.Dispose();
+			_networkServiceV4 = null;
+		}
 
-            m_NetworkChannels.Clear();
-        }
+		internal override void Update(float elapseSeconds, float realElapseSeconds)
+		{
+			if (_currentServiceType == ProtocolType.UdpV6)
+			{
+				_networkServiceV6.Update(elapseSeconds, realElapseSeconds);
+			}
+			else
+			{
+				_networkServiceV4.Update(elapseSeconds, realElapseSeconds);
+			}
+		}
 
-        /// <summary>
-        /// 检查是否存在网络频道。
-        /// </summary>
-        /// <param name="name">网络频道名称。</param>
-        /// <returns>是否存在网络频道。</returns>
-        public bool HasNetworkChannel(string name)
-        {
-            return m_NetworkChannels.ContainsKey(name ?? string.Empty);
-        }
+		public void Connect(IPEndPoint ipEndPointV6, IPEndPoint ipEndPointV4)
+		{
+			Log.Info("Start Connect");
+			//服务器和客户端都支持ipv6的话，就使用ipv6
+			if (ipEndPointV6 != default && NetworkHelper.GetOsServiceType() == ProtocolType.UdpV6)
+			{
+				Log.Info($"Connect UdpV6 {ipEndPointV6}");
+				_currentConnection = _networkServiceV6.Create(ipEndPointV6);
+			}
+			else
+			{
+				Log.Info($"Connect UdpV4 {ipEndPointV4}");
+				_currentConnection = _networkServiceV4.Create(ipEndPointV4);
+			}
+			_currentServiceType = NetworkHelper.GetOsServiceType();
+		}
 
-        /// <summary>
-        /// 获取网络频道。
-        /// </summary>
-        /// <param name="name">网络频道名称。</param>
-        /// <returns>要获取的网络频道。</returns>
-        public INetworkChannel GetNetworkChannel(string name)
-        {
-            NetworkChannelBase networkChannel = null;
-            if (m_NetworkChannels.TryGetValue(name ?? string.Empty, out networkChannel))
-            {
-                return networkChannel;
-            }
+		public void SendHeartbeat()
+		{
+			if(_currentServiceType == ProtocolType.UdpV6)
+			{
+				_networkServiceV6.SendHeartbeat(_currentConnection.LocalConnectionId);
+			}
+			else
+			{
+				_networkServiceV4.SendHeartbeat(_currentConnection.LocalConnectionId);
+			}
+		}
 
-            return null;
-        }
+		public void Disconnect()
+		{
+			if (_currentConnection == null)
+			{
+				return;
+			}
+			if (_currentServiceType == ProtocolType.UdpV6)
+			{
+				_networkServiceV6.Disconnect(_currentConnection.LocalConnectionId, _currentConnection.RemoteConnectionId, ErrorCode.ERR_PeerDisconnect, _currentConnection.RemoteIPEndPoint, 1);
 
-        /// <summary>
-        /// 获取所有网络频道。
-        /// </summary>
-        /// <returns>所有网络频道。</returns>
-        public INetworkChannel[] GetAllNetworkChannels()
-        {
-            int index = 0;
-            INetworkChannel[] results = new INetworkChannel[m_NetworkChannels.Count];
-            foreach (KeyValuePair<string, NetworkChannelBase> networkChannel in m_NetworkChannels)
-            {
-                results[index++] = networkChannel.Value;
-            }
+			}
+			else
+			{
+				_networkServiceV4.Disconnect(_currentConnection.LocalConnectionId, _currentConnection.RemoteConnectionId, ErrorCode.ERR_PeerDisconnect, _currentConnection.RemoteIPEndPoint, 1);
+			}
+		}
 
-            return results;
-        }
+		public void Send(ProtoObject data)
+		{
+			if (_currentServiceType == ProtocolType.UdpV6)
+			{
+				var memoryBuffer = _networkServiceV6.Fetch();
+				NetworkHelper.MessageToStream(memoryBuffer, data);
+				_networkServiceV6.Send(_currentConnection.LocalConnectionId, memoryBuffer);
+			}
+			else
+			{
+				var memoryBuffer = _networkServiceV4.Fetch();
+				NetworkHelper.MessageToStream(memoryBuffer, data);
+				_networkServiceV4.Send(_currentConnection.LocalConnectionId, memoryBuffer);
+			}
+			Log.Info($"<color=#ff8800>Server</color>  Send <color=#00ffff>ID:{data.ProtocolID}</color> \n Message:{data}");
+			ReferencePool.Release(data);
+		}
 
-        /// <summary>
-        /// 获取所有网络频道。
-        /// </summary>
-        /// <param name="results">所有网络频道。</param>
-        public void GetAllNetworkChannels(List<INetworkChannel> results)
-        {
-            if (results == null)
-            {
-                throw new GameFrameworkException("Results is invalid.");
-            }
+		private void OnAcceptCallback(uint connectionId, IPEndPoint ipEndPoint)
+		{
+			if(_currentConnection != null && connectionId == _currentConnection.LocalConnectionId)
+			{
+				_acceptCallback?.Invoke();
+			}
+		}
 
-            results.Clear();
-            foreach (KeyValuePair<string, NetworkChannelBase> networkChannel in m_NetworkChannels)
-            {
-                results.Add(networkChannel.Value);
-            }
-        }
+		private void OnReadCallback(uint connectionId, MemoryBuffer buffer)
+		{
+			if (_currentConnection != null && connectionId == _currentConnection.LocalConnectionId)
+			{
+				_readCallback?.Invoke(buffer);
+			}
+			
+		}
 
-        /// <summary>
-        /// 创建网络频道。
-        /// </summary>
-        /// <param name="name">网络频道名称。</param>
-        /// <param name="serviceType">网络服务类型。</param>
-        /// <param name="networkChannelHelper">网络频道辅助器。</param>
-        /// <returns>要创建的网络频道。</returns>
-        public INetworkChannel CreateNetworkChannel(string name, ServiceType serviceType, INetworkChannelHelper networkChannelHelper)
-        {
-            if (networkChannelHelper == null)
-            {
-                throw new GameFrameworkException("Network channel helper is invalid.");
-            }
-
-            if (networkChannelHelper.PacketHeaderLength < 0)
-            {
-                throw new GameFrameworkException("Packet header length is invalid.");
-            }
-
-            if (HasNetworkChannel(name))
-            {
-                throw new GameFrameworkException(Utility.Text.Format("Already exist network channel '{0}'.", name ?? string.Empty));
-            }
-
-            NetworkChannelBase networkChannel = null;
-            switch (serviceType)
-            {
-                case ServiceType.Tcp:
-                    networkChannel = new TcpNetworkChannel(name, networkChannelHelper);
-                    break;
-
-                case ServiceType.TcpWithSyncReceive:
-                    networkChannel = new TcpWithSyncReceiveNetworkChannel(name, networkChannelHelper);
-                    break;
-
-                default:
-                    throw new GameFrameworkException(Utility.Text.Format("Not supported service type '{0}'.", serviceType));
-            }
-
-            networkChannel.NetworkChannelConnected += OnNetworkChannelConnected;
-            networkChannel.NetworkChannelClosed += OnNetworkChannelClosed;
-            networkChannel.NetworkChannelMissHeartBeat += OnNetworkChannelMissHeartBeat;
-            networkChannel.NetworkChannelError += OnNetworkChannelError;
-            networkChannel.NetworkChannelCustomError += OnNetworkChannelCustomError;
-            m_NetworkChannels.Add(name, networkChannel);
-            return networkChannel;
-        }
-
-        /// <summary>
-        /// 销毁网络频道。
-        /// </summary>
-        /// <param name="name">网络频道名称。</param>
-        /// <returns>是否销毁网络频道成功。</returns>
-        public bool DestroyNetworkChannel(string name)
-        {
-            NetworkChannelBase networkChannel = null;
-            if (m_NetworkChannels.TryGetValue(name ?? string.Empty, out networkChannel))
-            {
-                networkChannel.NetworkChannelConnected -= OnNetworkChannelConnected;
-                networkChannel.NetworkChannelClosed -= OnNetworkChannelClosed;
-                networkChannel.NetworkChannelMissHeartBeat -= OnNetworkChannelMissHeartBeat;
-                networkChannel.NetworkChannelError -= OnNetworkChannelError;
-                networkChannel.NetworkChannelCustomError -= OnNetworkChannelCustomError;
-                networkChannel.Shutdown();
-                return m_NetworkChannels.Remove(name);
-            }
-
-            return false;
-        }
-
-        private void OnNetworkChannelConnected(NetworkChannelBase networkChannel, object userData)
-        {
-            if (m_NetworkConnectedEventHandler != null)
-            {
-                lock (m_NetworkConnectedEventHandler)
-                {
-                    NetworkConnectedEventArgs networkConnectedEventArgs = NetworkConnectedEventArgs.Create(networkChannel, userData);
-                    m_NetworkConnectedEventHandler(this, networkConnectedEventArgs);
-                    ReferencePool.Release(networkConnectedEventArgs);
-                }
-            }
-        }
-
-        private void OnNetworkChannelClosed(NetworkChannelBase networkChannel)
-        {
-            if (m_NetworkClosedEventHandler != null)
-            {
-                lock (m_NetworkClosedEventHandler)
-                {
-                    NetworkClosedEventArgs networkClosedEventArgs = NetworkClosedEventArgs.Create(networkChannel);
-                    m_NetworkClosedEventHandler(this, networkClosedEventArgs);
-                    ReferencePool.Release(networkClosedEventArgs);
-                }
-            }
-        }
-
-        private void OnNetworkChannelMissHeartBeat(NetworkChannelBase networkChannel, int missHeartBeatCount)
-        {
-            if (m_NetworkMissHeartBeatEventHandler != null)
-            {
-                lock (m_NetworkMissHeartBeatEventHandler)
-                {
-                    NetworkMissHeartBeatEventArgs networkMissHeartBeatEventArgs = NetworkMissHeartBeatEventArgs.Create(networkChannel, missHeartBeatCount);
-                    m_NetworkMissHeartBeatEventHandler(this, networkMissHeartBeatEventArgs);
-                    ReferencePool.Release(networkMissHeartBeatEventArgs);
-                }
-            }
-        }
-
-        private void OnNetworkChannelError(NetworkChannelBase networkChannel, NetworkErrorCode errorCode, SocketError socketErrorCode, string errorMessage)
-        {
-            if (m_NetworkErrorEventHandler != null)
-            {
-                lock (m_NetworkErrorEventHandler)
-                {
-                    NetworkErrorEventArgs networkErrorEventArgs = NetworkErrorEventArgs.Create(networkChannel, errorCode, socketErrorCode, errorMessage);
-                    m_NetworkErrorEventHandler(this, networkErrorEventArgs);
-                    ReferencePool.Release(networkErrorEventArgs);
-                }
-            }
-        }
-
-        private void OnNetworkChannelCustomError(NetworkChannelBase networkChannel, object customErrorData)
-        {
-            if (m_NetworkCustomErrorEventHandler != null)
-            {
-                lock (m_NetworkCustomErrorEventHandler)
-                {
-                    NetworkCustomErrorEventArgs networkCustomErrorEventArgs = NetworkCustomErrorEventArgs.Create(networkChannel, customErrorData);
-                    m_NetworkCustomErrorEventHandler(this, networkCustomErrorEventArgs);
-                    ReferencePool.Release(networkCustomErrorEventArgs);
-                }
-            }
-        }
-    }
+		private void OnErrorCallback(uint connectionId, int code)
+		{
+			if (_currentConnection != null && connectionId == _currentConnection.LocalConnectionId)
+			{
+				_errorCallback?.Invoke(code);
+			}
+			
+		}
+	}
 }

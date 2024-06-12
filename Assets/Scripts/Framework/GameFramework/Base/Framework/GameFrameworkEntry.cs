@@ -16,24 +16,45 @@ namespace GameFramework
     public static class GameFrameworkEntry
     {
         private static readonly GameFrameworkLinkedList<GameFrameworkModule> s_GameFrameworkModules = new GameFrameworkLinkedList<GameFrameworkModule>();
-
-        /// <summary>
-        /// 所有游戏框架模块轮询。
-        /// </summary>
-        /// <param name="elapseSeconds">逻辑流逝时间，以秒为单位。</param>
-        /// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
-        public static void Update(float elapseSeconds, float realElapseSeconds)
+        static GameFrameworkEntry()
         {
-            foreach (GameFrameworkModule module in s_GameFrameworkModules)
+			TimeInfo.Init();
+		}
+
+        public static void FixedUpdate()
+        {
+			foreach (GameFrameworkModule module in s_GameFrameworkModules)
+			{
+				module.FixedUpdate();
+			}
+		}
+
+		/// <summary>
+		/// 所有游戏框架模块轮询。
+		/// </summary>
+		/// <param name="elapseSeconds">逻辑流逝时间，以秒为单位。</param>
+		/// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
+		public static void Update(float elapseSeconds, float realElapseSeconds)
+        {
+			TimeInfo.Update();
+			foreach (GameFrameworkModule module in s_GameFrameworkModules)
             {
                 module.Update(elapseSeconds, realElapseSeconds);
             }
         }
 
-        /// <summary>
-        /// 关闭并清理所有游戏框架模块。
-        /// </summary>
-        public static void Shutdown()
+		public static void LateUpdate()
+		{
+			foreach (GameFrameworkModule module in s_GameFrameworkModules)
+			{
+				module.LateUpdate();
+			}
+		}
+
+		/// <summary>
+		/// 关闭并清理所有游戏框架模块。
+		/// </summary>
+		public static void Shutdown()
         {
             for (LinkedListNode<GameFrameworkModule> current = s_GameFrameworkModules.Last; current != null; current = current.Previous)
             {

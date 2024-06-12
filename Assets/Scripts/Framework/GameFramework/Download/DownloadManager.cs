@@ -45,13 +45,7 @@ namespace GameFramework.Download
         /// 获取游戏框架模块优先级。
         /// </summary>
         /// <remarks>优先级较高的模块会优先轮询，并且关闭操作会后进行。</remarks>
-        internal override int Priority
-        {
-            get
-            {
-                return 5;
-            }
-        }
+        internal override int Priority => DownloadManagerPriority;
 
         /// <summary>
         /// 获取或设置下载是否被暂停。

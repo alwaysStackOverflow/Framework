@@ -1,1 +1,35 @@
-{"name":"Editor","rootNamespace":"Editor","references":["GUID:4b33890697a5ea7419d62eedbba210a5","GUID:363c5eb08ff8e6a439b85e37b8c20d96","GUID:e34a5702dd353724aa315fb8011f08c3","GUID:8cda984037295814c8c7b5fffb4086cc","GUID:ab2eb73466435304899f21eebd90ff90","GUID:1297eec13e1b5c0449efd29c0a07a258","GUID:16dc124612291d34890206fa3215a5a6","GUID:5c1ff9bd975acec488150743d53a93ca","GUID:2373f786d14518f44b0f475db77ba4de","GUID:13ba8ce62aa80c74598530029cb2d649","GUID:c5ecc461727906345a35491a0440694f","GUID:0244ca4987514734a84f74195d54113d","GUID:adbcba91892774149bea528141373ca2"],"includePlatforms":["Editor"],"excludePlatforms":[],"allowUnsafeCode":true,"overrideReferences":false,"precompiledReferences":[],"autoReferenced":true,"defineConstraints":["ENABLE_LOG"],"versionDefines":[],"noEngineReferences":false}
+{
+    "name": "Editor",
+    "rootNamespace": "Editor",
+    "references": [
+        "GUID:4b33890697a5ea7419d62eedbba210a5",
+        "GUID:363c5eb08ff8e6a439b85e37b8c20d96",
+        "GUID:e34a5702dd353724aa315fb8011f08c3",
+        "GUID:8cda984037295814c8c7b5fffb4086cc",
+        "GUID:ab2eb73466435304899f21eebd90ff90",
+        "GUID:1297eec13e1b5c0449efd29c0a07a258",
+        "GUID:16dc124612291d34890206fa3215a5a6",
+        "GUID:5c1ff9bd975acec488150743d53a93ca",
+        "GUID:2373f786d14518f44b0f475db77ba4de",
+        "GUID:13ba8ce62aa80c74598530029cb2d649",
+        "GUID:c5ecc461727906345a35491a0440694f",
+        "GUID:0244ca4987514734a84f74195d54113d",
+        "GUID:adbcba91892774149bea528141373ca2",
+        "GUID:343deaaf83e0cee4ca978e7df0b80d21",
+        "GUID:2bafac87e7f4b9b418d9448d219b01ab",
+        "GUID:2c573e6b271651846a79655161004c5b"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ENABLE_LOG"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

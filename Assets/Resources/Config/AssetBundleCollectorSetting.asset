@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185f6993d5150494d98da50e26cb1c25, type: 3}
+  m_Name: AssetBundleCollectorSetting
+  m_EditorClassIdentifier: 
+  ShowPackageView: 0
+  ShowEditorAlias: 0
+  UniqueBundleName: 0
+  Packages:
+  - PackageName: DefaultPackage
+    PackageDesc: 
+    EnableAddressable: 1
+    LocationToLower: 0
+    IncludeAssetGUID: 1
+    IgnoreDefaultType: 0
+    AutoCollectShaders: 1
+    Groups:
+    - GroupName: Binaries
+      GroupDesc: "\u9879\u76EE\u7684\u4EE3\u7801\u6587\u4EF6"
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/Bundles/Binaries
+        CollectorGUID: b35437142e167cb48b5ed83aba6ea4b2
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+    - GroupName: Config
+      GroupDesc: "\u9879\u76EE\u7684\u914D\u7F6E\u6587\u4EF6"
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/Bundles/Config
+        CollectorGUID: bb8142b31166bf04fa77befa81c4e34d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+    - GroupName: GameResources
+      GroupDesc: "\u9879\u76EE\u7684\u8D44\u6E90"
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/Bundles/GameResources/Effects
+        CollectorGUID: 20250d8639c87ff4b8f509647a3d10fb
+        CollectorType: 2
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Bundles/GameResources/Fonts
+        CollectorGUID: a749db9ecbefb8b4b9dd506032da5551
+        CollectorType: 2
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Bundles/GameResources/PrefabAssets
+        CollectorGUID: 6487e60cc99ef62498f23cb5b0c534e3
+        CollectorType: 2
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectNotPrefab
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Bundles/GameResources/PrefabAssets
+        CollectorGUID: 6487e60cc99ef62498f23cb5b0c534e3
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectPrefab
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Bundles/GameResources/Scenes
+        CollectorGUID: 7cb85a258d55b1340a58ca381efbebe8
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 

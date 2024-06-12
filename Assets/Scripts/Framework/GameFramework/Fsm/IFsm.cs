@@ -92,12 +92,15 @@ namespace GameFramework.Fsm
         /// <param name="stateType">要开始的有限状态机状态类型。</param>
         void Start(Type stateType);
 
-        /// <summary>
-        /// 是否存在有限状态机状态。
-        /// </summary>
-        /// <typeparam name="TState">要检查的有限状态机状态类型。</typeparam>
-        /// <returns>是否存在有限状态机状态。</returns>
-        bool HasState<TState>() where TState : FsmState<T>;
+		void AddState(string name,params FsmState<T>[] states);
+        void AddState(string name, List<FsmState<T>> states);
+
+		/// <summary>
+		/// 是否存在有限状态机状态。
+		/// </summary>
+		/// <typeparam name="TState">要检查的有限状态机状态类型。</typeparam>
+		/// <returns>是否存在有限状态机状态。</returns>
+		bool HasState<TState>() where TState : FsmState<T>;
 
         /// <summary>
         /// 是否存在有限状态机状态。

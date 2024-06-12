@@ -1,149 +1,173 @@
-﻿//------------------------------------------------------------
-// Game Framework
-// Copyright © 2013-2021 Jiang Yin. All rights reserved.
-// Homepage: https://gameframework.cn/
-// Feedback: mailto:ellan@gameframework.cn
-//------------------------------------------------------------
-
-using System;
+﻿using System.Threading;
+using GameFramework.Network;
+using System.Collections.Concurrent;
 
 namespace GameFramework.Event
 {
-    /// <summary>
-    /// 事件管理器。
-    /// </summary>
-    internal sealed class EventManager : GameFrameworkModule, IEventManager
-    {
-        private readonly EventPool<GameEventArgs> m_EventPool;
+	internal sealed class EventManager : GameFrameworkModule, IEventManager
+	{
+		private class EventData : IReference
+		{
+			public BaseEventArgs Data { get; set; }
 
-        /// <summary>
-        /// 初始化事件管理器的新实例。
-        /// </summary>
-        public EventManager()
-        {
-            m_EventPool = new EventPool<GameEventArgs>(EventPoolMode.AllowNoHandler | EventPoolMode.AllowMultiHandler);
-        }
+			public void Clear()
+			{
+				Data = null;
+			}
 
-        /// <summary>
-        /// 获取事件处理函数的数量。
-        /// </summary>
-        public int EventHandlerCount
-        {
-            get
-            {
-                return m_EventPool.EventHandlerCount;
-            }
-        }
+			public static EventData Create(BaseEventArgs data)
+			{
+				var eventNode = ReferencePool.Acquire<EventData>();
+				eventNode.Data = data;
+				return eventNode;
+			}
+		}
 
-        /// <summary>
-        /// 获取事件数量。
-        /// </summary>
-        public int EventCount
-        {
-            get
-            {
-                return m_EventPool.EventCount;
-            }
-        }
+		private class NetworkData : IReference
+		{
+			public ProtoObject Data { get; set; }
 
-        /// <summary>
-        /// 获取游戏框架模块优先级。
-        /// </summary>
-        /// <remarks>优先级较高的模块会优先轮询，并且关闭操作会后进行。</remarks>
-        internal override int Priority
-        {
-            get
-            {
-                return 7;
-            }
-        }
+			public void Clear()
+			{
+				Data = null;
+			}
 
-        /// <summary>
-        /// 事件管理器轮询。
-        /// </summary>
-        /// <param name="elapseSeconds">逻辑流逝时间，以秒为单位。</param>
-        /// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
-        internal override void Update(float elapseSeconds, float realElapseSeconds)
-        {
-            m_EventPool.Update(elapseSeconds, realElapseSeconds);
-        }
+			public static NetworkData Create(ProtoObject data)
+			{
+				var eventNode = ReferencePool.Acquire<NetworkData>();
+				eventNode.Data = data;
+				return eventNode;
+			}
+		}
 
-        /// <summary>
-        /// 关闭并清理事件管理器。
-        /// </summary>
-        internal override void Shutdown()
-        {
-            m_EventPool.Shutdown();
-        }
+		internal override int Priority => EventManagerPriority;
 
-        /// <summary>
-        /// 获取事件处理函数的数量。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <returns>事件处理函数的数量。</returns>
-        public int Count(int id)
-        {
-            return m_EventPool.Count(id);
-        }
+		private readonly ConcurrentDoubleKeyMap<string, object, AActionArgsData> _eventHandlerDataMap = new();
+		private readonly ConcurrentQueue<EventData> _eventsQueue = new();
 
-        /// <summary>
-        /// 检查是否存在事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要检查的事件处理函数。</param>
-        /// <returns>是否存在事件处理函数。</returns>
-        public bool Check(int id, EventHandler<GameEventArgs> handler)
-        {
-            return m_EventPool.Check(id, handler);
-        }
+		private readonly ConcurrentDoubleKeyMap<int, object, AActionArgsData> _protoHandlerDataMap = new();
+		private readonly ConcurrentQueue<NetworkData> _networkMessageQueue = new();
+		private SynchronizationContext _unitySynchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
+		internal override void Update(float elapseSeconds, float realElapseSeconds)
+		{
+			while (_networkMessageQueue.Count > 0)
+			{
+				if (_networkMessageQueue.TryDequeue(out var eventNode))
+				{
+					_unitySynchronizationContext.Send((object state) =>
+					{
+						HandleNetworkEvent(eventNode.Data);
+						ReferencePool.Release(eventNode);
+					}, null);
 
-        /// <summary>
-        /// 订阅事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要订阅的事件处理函数。</param>
-        public void Subscribe(int id, EventHandler<GameEventArgs> handler)
-        {
-            m_EventPool.Subscribe(id, handler);
-        }
+				}
+			}
 
-        /// <summary>
-        /// 取消订阅事件处理函数。
-        /// </summary>
-        /// <param name="id">事件类型编号。</param>
-        /// <param name="handler">要取消订阅的事件处理函数。</param>
-        public void Unsubscribe(int id, EventHandler<GameEventArgs> handler)
-        {
-            m_EventPool.Unsubscribe(id, handler);
-        }
+			while (_eventsQueue.Count > 0)
+			{
+				if (_eventsQueue.TryDequeue(out var eventNode))
+				{
+					_unitySynchronizationContext.Send((object state) =>
+					{
+						HandleEvent(eventNode.Data);
+						ReferencePool.Release(eventNode);
+					}, null);
+				}
+			}
+		}
 
-        /// <summary>
-        /// 设置默认事件处理函数。
-        /// </summary>
-        /// <param name="handler">要设置的默认事件处理函数。</param>
-        public void SetDefaultHandler(EventHandler<GameEventArgs> handler)
-        {
-            m_EventPool.SetDefaultHandler(handler);
-        }
+		internal override void Shutdown()
+		{
+			_protoHandlerDataMap.Clear();
+			_networkMessageQueue.Clear();
+			_eventHandlerDataMap.Clear();
+			_eventsQueue.Clear();
+		}
 
-        /// <summary>
-        /// 抛出事件，这个操作是线程安全的，即使不在主线程中抛出，也可保证在主线程中回调事件处理函数，但事件会在抛出后的下一帧分发。
-        /// </summary>
-        /// <param name="sender">事件源。</param>
-        /// <param name="e">事件参数。</param>
-        public void Fire(object sender, GameEventArgs e)
-        {
-            m_EventPool.Fire(sender, e);
-        }
 
-        /// <summary>
-        /// 抛出事件立即模式，这个操作不是线程安全的，事件会立刻分发。
-        /// </summary>
-        /// <param name="sender">事件源。</param>
-        /// <param name="e">事件参数。</param>
-        public void FireNow(object sender, GameEventArgs e)
-        {
-            m_EventPool.FireNow(sender, e);
-        }
-    }
+		#region Event
+		public void Subscribe<T>(string id, GameFrameworkAction<T> handler) where T : BaseEventArgs
+		{
+			var handlerData = ActionArgsData<T>.Create(handler);
+			_eventHandlerDataMap.Add(id, handler, handlerData);
+		}
+
+		public void Unsubscribe<T>(string id, GameFrameworkAction<T> handler) where T : BaseEventArgs
+		{
+			_eventHandlerDataMap.Remove(id, handler);
+		}
+
+		public void Fire<T>(T e = default) where T : BaseEventArgs
+		{
+			_unitySynchronizationContext.Send((object state) =>
+			{
+				var eventNode = EventData.Create(e);
+				_eventsQueue.Enqueue(eventNode);
+			}, null);
+		}
+
+		public void FireNow<T>(T e = default) where T : BaseEventArgs
+		{
+			_unitySynchronizationContext.Send((object state) =>
+			{
+				HandleEvent(e);
+			}, null);
+		}
+
+		private void HandleEvent(BaseEventArgs e)
+		{
+			if(_eventHandlerDataMap.TryGetValue(e.Id, out var handlerList))
+			{
+				foreach(var handlerData in handlerList.Values)
+				{
+					handlerData.Invoke(e);
+				}
+			}
+			ReferencePool.Release(e);
+		}
+		#endregion Event
+
+		#region NetworkMessage
+		public void Listen<T>(int id, GameFrameworkAction<T> handler) where T : ProtoObject
+		{
+			var hendlerData = ActionArgsData<T>.Create(handler);
+			_protoHandlerDataMap.Add(id, handler, hendlerData);
+		}
+
+		public void Unlisten<T>(int id, GameFrameworkAction<T> handler) where T : ProtoObject
+		{
+			_protoHandlerDataMap.Remove(id, handler);
+		}
+
+		public void Trigger<T>(T e) where T : ProtoObject
+		{
+			_unitySynchronizationContext.Send((object state) =>
+			{
+				var eventNode = NetworkData.Create(e);
+				_networkMessageQueue.Enqueue(eventNode);
+			}, null);
+		}
+
+		public void TriggerNow<T>(T e) where T : ProtoObject
+		{
+			_unitySynchronizationContext.Send((object state) =>
+			{
+				HandleNetworkEvent(e);
+			}, null);
+		}
+
+		private void HandleNetworkEvent(ProtoObject data)
+		{
+			if (_protoHandlerDataMap.TryGetValue(data.ProtocolID, out var handlerList))
+			{
+				foreach (var handlerData in handlerList.Values)
+				{
+					handlerData.Invoke(data);
+				}
+			}
+			data.Recycle();
+		}
+
+		#endregion NetworkMessage
+	}
 }

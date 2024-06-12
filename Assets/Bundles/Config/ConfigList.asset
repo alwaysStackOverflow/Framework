@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6af946b7fcfc5d64a886222356bc4a87, type: 3}
+  m_Name: ConfigList
+  m_EditorClassIdentifier: 
+  ConfigInfoList:
+  - ConfigType: 1
+    ConfigPath: Assets/Bundles/Config/ConfigList.asset
+  - ConfigType: 2
+    ConfigPath: Assets/Bundles/Config/ResourceConfig.asset
+  - ConfigType: 4
+    ConfigPath: Assets/Bundles/Config/BuildingConfig.asset
+  - ConfigType: 5
+    ConfigPath: Assets/Bundles/Config/LevelConfig.asset

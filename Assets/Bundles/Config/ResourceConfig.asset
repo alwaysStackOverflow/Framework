@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e9c28f8708ba734d8b9e68b8999f3c2, type: 3}
+  m_Name: ResourceConfig
+  m_EditorClassIdentifier: 
+  SceneConfig:
+  - SceneType: 1
+    AssetsPath: Assets/Bundles/GameResources/Scenes/Init.unity
+  - SceneType: 2
+    AssetsPath: Assets/Bundles/GameResources/Scenes/Menu.unity
+  - SceneType: 3
+    AssetsPath: Assets/Bundles/GameResources/Scenes/Home.unity
+  UIConfig:
+  - UIType: 1
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Entry/Common.prefab
+    UILayer: 0
+  - UIType: 2
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Entry/Client.prefab
+    UILayer: 0
+  - UIType: 3
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Entry/Server.prefab
+    UILayer: 0
+  - UIType: 4
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Update/UIUpdateResourceForm.prefab
+    UILayer: 0
+  - UIType: 5
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Menu/Prefab/UIMenuForm.prefab
+    UILayer: 0
+  - UIType: 6
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Menu/Prefab/UISavingsForm.prefab
+    UILayer: 0
+  - UIType: 7
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Login/Prefab/UICreateNewPlayerForm.prefab
+    UILayer: 0
+  - UIType: 8
+    AssetsPath: Assets/Bundles/GameResources/PrefabAssets/Login/Prefab/UILoginForm.prefab
+    UILayer: 0
+  PlayerModelConfig:
+  - Type: 1
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_White.prefab
+  - Type: 2
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Yellow.prefab
+  - Type: 3
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Brown.prefab
+  - Type: 4
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Black.prefab
+  - Type: 5
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_White.prefab
+  - Type: 6
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Yellow.prefab
+  - Type: 7
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Brown.prefab
+  - Type: 8
+    AssetPath: Assets/Bundles/GameResources/PrefabAssets/Player/Prefabs/Male_Black.prefab
+  WeaponModelConfig: []
+  BuildingModelConfig: []

@@ -65,12 +65,12 @@ namespace YooAsset.Editor
                     _toolbar.Add(_packageMenu);
                 }
 
-                // 构建管线
-                {
-                    _pipelineMenu = new ToolbarMenu();
+				// 构建管线. Unity 版本大于 2021.3 推荐使用 ScriptableBuildPipeline
+				{
+					_pipelineMenu = new ToolbarMenu();
                     _pipelineMenu.style.width = 200;
-                    _pipelineMenu.menu.AppendAction(EBuildPipeline.BuiltinBuildPipeline.ToString(), PipelineMenuAction, PipelineMenuFun, EBuildPipeline.BuiltinBuildPipeline);
-                    _pipelineMenu.menu.AppendAction(EBuildPipeline.ScriptableBuildPipeline.ToString(), PipelineMenuAction, PipelineMenuFun, EBuildPipeline.ScriptableBuildPipeline);
+					_pipelineMenu.menu.AppendAction(EBuildPipeline.ScriptableBuildPipeline.ToString(), PipelineMenuAction, PipelineMenuFun, EBuildPipeline.ScriptableBuildPipeline);
+					_pipelineMenu.menu.AppendAction(EBuildPipeline.BuiltinBuildPipeline.ToString(), PipelineMenuAction, PipelineMenuFun, EBuildPipeline.BuiltinBuildPipeline);
                     _pipelineMenu.menu.AppendAction(EBuildPipeline.RawFileBuildPipeline.ToString(), PipelineMenuAction, PipelineMenuFun, EBuildPipeline.RawFileBuildPipeline);
                     _toolbar.Add(_pipelineMenu);
                 }

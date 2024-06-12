@@ -31,18 +31,12 @@ namespace GameFramework.Procedure
         /// 获取游戏框架模块优先级。
         /// </summary>
         /// <remarks>优先级较高的模块会优先轮询，并且关闭操作会后进行。</remarks>
-        internal override int Priority
-        {
-            get
-            {
-                return -2;
-            }
-        }
+        internal override int Priority => ProcedureManagerPriority;
 
-        /// <summary>
-        /// 获取当前流程。
-        /// </summary>
-        public ProcedureBase CurrentProcedure
+		/// <summary>
+		/// 获取当前流程。
+		/// </summary>
+		public ProcedureBase CurrentProcedure
         {
             get
             {
@@ -113,11 +107,16 @@ namespace GameFramework.Procedure
             m_ProcedureFsm = m_FsmManager.CreateFsm(this, procedures);
         }
 
-        /// <summary>
-        /// 开始流程。
-        /// </summary>
-        /// <typeparam name="T">要开始的流程类型。</typeparam>
-        public void StartProcedure<T>() where T : ProcedureBase
+        public void AddProcedure(params ProcedureBase[] procedures)
+        {
+            m_FsmManager?.CreateFsm(this, procedures);
+		}
+
+		/// <summary>
+		/// 开始流程。
+		/// </summary>
+		/// <typeparam name="T">要开始的流程类型。</typeparam>
+		public void StartProcedure<T>() where T : ProcedureBase
         {
             if (m_ProcedureFsm == null)
             {
@@ -141,12 +140,36 @@ namespace GameFramework.Procedure
             m_ProcedureFsm.Start(procedureType);
         }
 
-        /// <summary>
-        /// 是否存在流程。
-        /// </summary>
-        /// <typeparam name="T">要检查的流程类型。</typeparam>
-        /// <returns>是否存在流程。</returns>
-        public bool HasProcedure<T>() where T : ProcedureBase
+        public void ChangeProcedure<T>() where T : ProcedureBase
+        {
+			if (m_ProcedureFsm == null)
+			{
+				throw new GameFrameworkException("You must initialize procedure first.");
+			}
+            if(m_ProcedureFsm is Fsm<IProcedureManager> fsm)
+            {
+                fsm.ChangeState<T>();
+            }
+		}
+
+		public void ChangeProcedure(Type t)
+		{
+			if (m_ProcedureFsm == null)
+			{
+				throw new GameFrameworkException("You must initialize procedure first.");
+			}
+			if (m_ProcedureFsm is Fsm<IProcedureManager> fsm)
+			{
+				fsm.ChangeState(t);
+			}
+		}
+
+		/// <summary>
+		/// 是否存在流程。
+		/// </summary>
+		/// <typeparam name="T">要检查的流程类型。</typeparam>
+		/// <returns>是否存在流程。</returns>
+		public bool HasProcedure<T>() where T : ProcedureBase
         {
             if (m_ProcedureFsm == null)
             {

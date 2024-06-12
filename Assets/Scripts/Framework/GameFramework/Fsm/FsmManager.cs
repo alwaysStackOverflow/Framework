@@ -31,18 +31,12 @@ namespace GameFramework.Fsm
         /// 获取游戏框架模块优先级。
         /// </summary>
         /// <remarks>优先级较高的模块会优先轮询，并且关闭操作会后进行。</remarks>
-        internal override int Priority
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        internal override int Priority => FsmManagerPriority;
 
-        /// <summary>
-        /// 获取有限状态机数量。
-        /// </summary>
-        public int Count
+		/// <summary>
+		/// 获取有限状态机数量。
+		/// </summary>
+		public int Count
         {
             get
             {
@@ -253,25 +247,44 @@ namespace GameFramework.Fsm
         /// <returns>要创建的有限状态机。</returns>
         public IFsm<T> CreateFsm<T>(string name, T owner, params FsmState<T>[] states) where T : class
         {
-            TypeNamePair typeNamePair = new TypeNamePair(typeof(T), name);
+            TypeNamePair typeNamePair = new(typeof(T), name);
             if (HasFsm<T>(name))
             {
-                throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", typeNamePair));
-            }
+                var f = AddFsmState(typeNamePair, states);
+                if (f != null)
+                {
+                    return f;
+                }
+                else
+                {
+					throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", typeNamePair));
+				}
+			}
 
             Fsm<T> fsm = Fsm<T>.Create(name, owner, states);
             m_Fsms.Add(typeNamePair, fsm);
             return fsm;
         }
 
-        /// <summary>
-        /// 创建有限状态机。
-        /// </summary>
-        /// <typeparam name="T">有限状态机持有者类型。</typeparam>
-        /// <param name="owner">有限状态机持有者。</param>
-        /// <param name="states">有限状态机状态集合。</param>
-        /// <returns>要创建的有限状态机。</returns>
-        public IFsm<T> CreateFsm<T>(T owner, List<FsmState<T>> states) where T : class
+        public Fsm<T> AddFsmState<T>(TypeNamePair key, params FsmState<T>[] states) where T : class
+		{
+            if(m_Fsms.TryGetValue(key, out FsmBase fsmBase))
+            {
+				var fsm = fsmBase as Fsm<T>;
+				fsm.AddState(key.Name, states);
+				return fsm;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// 创建有限状态机。
+		/// </summary>
+		/// <typeparam name="T">有限状态机持有者类型。</typeparam>
+		/// <param name="owner">有限状态机持有者。</param>
+		/// <param name="states">有限状态机状态集合。</param>
+		/// <returns>要创建的有限状态机。</returns>
+		public IFsm<T> CreateFsm<T>(T owner, List<FsmState<T>> states) where T : class
         {
             return CreateFsm(string.Empty, owner, states);
         }
@@ -286,23 +299,42 @@ namespace GameFramework.Fsm
         /// <returns>要创建的有限状态机。</returns>
         public IFsm<T> CreateFsm<T>(string name, T owner, List<FsmState<T>> states) where T : class
         {
-            TypeNamePair typeNamePair = new TypeNamePair(typeof(T), name);
+            TypeNamePair typeNamePair = new(typeof(T), name);
             if (HasFsm<T>(name))
             {
-                throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", typeNamePair));
-            }
+				var f = AddFsmState(typeNamePair, states);
+				if (f != null)
+				{
+					return f;
+				}
+				else
+				{
+					throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", typeNamePair));
+				}
+			}
 
             Fsm<T> fsm = Fsm<T>.Create(name, owner, states);
             m_Fsms.Add(typeNamePair, fsm);
             return fsm;
         }
 
-        /// <summary>
-        /// 销毁有限状态机。
-        /// </summary>
-        /// <typeparam name="T">有限状态机持有者类型。</typeparam>
-        /// <returns>是否销毁有限状态机成功。</returns>
-        public bool DestroyFsm<T>() where T : class
+		public Fsm<T> AddFsmState<T>(TypeNamePair key, List<FsmState<T>> states) where T : class
+		{
+			if (m_Fsms.TryGetValue(key, out FsmBase fsmBase))
+			{
+                var fsm = fsmBase as Fsm<T>;
+				fsm.AddState(key.Name, states);
+                return fsm;
+			}
+            return null;
+		}
+
+		/// <summary>
+		/// 销毁有限状态机。
+		/// </summary>
+		/// <typeparam name="T">有限状态机持有者类型。</typeparam>
+		/// <returns>是否销毁有限状态机成功。</returns>
+		public bool DestroyFsm<T>() where T : class
         {
             return InternalDestroyFsm(new TypeNamePair(typeof(T)));
         }

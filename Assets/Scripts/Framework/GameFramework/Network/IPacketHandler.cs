@@ -25,6 +25,6 @@ namespace GameFramework.Network
         /// </summary>
         /// <param name="sender">网络消息包源。</param>
         /// <param name="packet">网络消息包内容。</param>
-        void Handle(object sender, Packet packet);
+        void Handle(object sender, IPacket packet);
     }
 }

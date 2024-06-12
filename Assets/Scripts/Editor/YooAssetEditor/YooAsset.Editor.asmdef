@@ -1,1 +1,27 @@
-{"name":"YooAsset.Editor","rootNamespace":"","references":["YooAsset","Unity.ScriptableBuildPipeline","Unity.ScriptableBuildPipeline.Editor"],"includePlatforms":["Editor"],"excludePlatforms":[],"allowUnsafeCode":false,"overrideReferences":false,"precompiledReferences":[],"autoReferenced":true,"defineConstraints":[],"versionDefines":[],"noEngineReferences":false}
+{
+    "name": "YooAsset.Editor",
+    "rootNamespace": "",
+    "references": [
+        "YooAsset",
+        "Unity.ScriptableBuildPipeline",
+        "Unity.ScriptableBuildPipeline.Editor",
+        "GameFramework",
+        "UnityGameFramework",
+        "Loader",
+        "Server",
+        "Common",
+        "Client",
+        "Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
